@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#f6d3d9">
+    <meta name="description" content="Кездесуге шақыру">
+    <title>Менімен кездесуге барасың ба?</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- "Иә" басылғанда бірден көрінуі үшін алдын ала жүктейміз -->
+    <link rel="preload" as="image" href="https://media.giphy.com/media/UMon0fuimoAN9ueUNP/giphy.gif">
+    <link rel="icon"
+          href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💌</text></svg>">
+</head>
+<body>
+
+<!-- Фондағы қошқар мүйіз өрнегі (статикалық, өте бәсең) -->
+<svg class="bg-ornament" aria-hidden="true" focusable="false">
+    <defs>
+        <g id="koshkar-muiz" fill="none" stroke="#e94d58" stroke-width="3"
+           stroke-linecap="round" stroke-linejoin="round">
+            <path d="M60 54 C45 55 30 50 24 38 C18 26 26 14 38 16.5 C48 18.5 50.5 30 42.5 33 C36.5 35 32 30 35 26"/>
+            <path d="M60 54 C75 55 90 50 96 38 C102 26 94 14 82 16.5 C72 18.5 69.5 30 77.5 33 C83.5 35 88 30 85 26"/>
+            <path d="M60 54 L60 62"/>
+            <path d="M49 62 L71 62"/>
+        </g>
+        <pattern id="ornament-pattern" width="120" height="120" patternUnits="userSpaceOnUse">
+            <use href="#koshkar-muiz"/>
+            <use href="#koshkar-muiz" transform="translate(60,52) rotate(180 60 38)"/>
+            <use href="#koshkar-muiz" transform="translate(-60,52) rotate(180 60 38)"/>
+        </pattern>
+    </defs>
+    <rect width="100%" height="100%" fill="url(#ornament-pattern)"/>
+</svg>
+
+<canvas id="fireworks" aria-hidden="true"></canvas>
+
+<main class="stage">
+
+    <!-- 1-экран: сұрақ -->
+    <section class="screen is-active" id="screen-ask" aria-labelledby="q-title">
+        <div class="card">
+            <img class="gif" id="gif-ask" width="304" height="264" alt=""
+                 src="https://media.giphy.com/media/FTGah7Mx3ss04PcasF/giphy.gif">
+
+            <h1 class="title" id="q-title">Менімен кездесуге барасың ба?</h1>
+            <p class="subtitle"></p>
+
+            <div class="arena" id="arena">
+                <div class="arena__row">
+                    <button class="btn btn--yes" id="btn-yes" type="button">Иә</button>
+                    <button class="btn btn--no" id="btn-no" type="button">Жоқ</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="screen" id="screen-yay" aria-labelledby="y-title" hidden>
+        <div class="card">
+            <img class="gif" id="gif-yes" width="272" height="242" alt=""
+                 src="https://media.giphy.com/media/UMon0fuimoAN9ueUNP/giphy.gif">
+
+            <h2 class="title" id="y-title">Бәрекелді! 🎉</h2>
+            <p class="subtitle">Мен қуаныштымын. Маған жаз&nbsp;👇</p>
+
+            <a class="contact" id="contact-link" href="#" target="_blank" rel="noopener">
+                <span class="contact__icon" aria-hidden="true">📷</span>
+                <span class="contact__text" id="contact-text">@ulankozhabekov</span>
+            </a>
+
+            <p class="hint hint--soft">Күні мен орнын бірге таңдаймыз&nbsp;☕️</p>
+        </div>
+    </section>
+
+</main>
+
+<script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,249 @@
+/* ============================================================
+   Кездесуге шақыру
+   Палитра: жұмсақ қызғылт фон + коралл екпін
+   ============================================================ */
+
+:root {
+  --bg:          #f6d3d9;   /* фон — жұмсақ қызғылт */
+  --card:        #ffffff;
+  --accent:      #e94d58;   /* коралл — негізгі екпін */
+  --accent-dark: #d13a45;
+  --ink:         #6b2f36;   /* мәтін */
+  --ink-soft:    rgba(107, 47, 54, .62);
+  --line:        rgba(233, 77, 88, .28);
+
+  --radius: 24px;
+  --ease: cubic-bezier(.4, 0, .2, 1);
+
+  --sa-t: env(safe-area-inset-top, 0px);
+  --sa-r: env(safe-area-inset-right, 0px);
+  --sa-b: env(safe-area-inset-bottom, 0px);
+  --sa-l: env(safe-area-inset-left, 0px);
+}
+
+* { box-sizing: border-box; }
+
+html, body { height: 100%; margin: 0; }
+
+body {
+  min-height: 100svh;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+               "Helvetica Neue", Arial, sans-serif;
+  color: var(--ink);
+  background: var(--bg);
+  overflow: hidden;
+  overscroll-behavior: none;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ---------- Фон өрнегі (қошқар мүйіз) ---------- */
+
+.bg-ornament {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: .1;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ---------- Фейерверк ---------- */
+
+#fireworks {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .8s var(--ease);
+}
+#fireworks.is-on { opacity: 1; }
+
+/* ---------- Сахна ---------- */
+
+.stage {
+  position: relative;
+  z-index: 2;
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
+  padding:
+    calc(var(--sa-t) + 14px)
+    calc(var(--sa-r) + 14px)
+    calc(var(--sa-b) + 14px)
+    calc(var(--sa-l) + 14px);
+}
+
+.screen {
+  grid-area: 1 / 1;
+  width: 100%;
+  max-width: 480px;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity .5s var(--ease), transform .5s var(--ease);
+  pointer-events: none;
+}
+
+.screen.is-active {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+
+.screen[hidden] { display: none; }
+
+/* ---------- Карточка ---------- */
+
+.card {
+  padding: clamp(20px, 5vw, 32px) clamp(18px, 5vw, 32px);
+  text-align: center;
+  border-radius: var(--radius);
+  background: var(--card);
+  box-shadow: 0 14px 40px rgba(107, 47, 54, .13);
+}
+
+/* ---------- Гифка ---------- */
+
+.gif {
+  display: block;
+  height: clamp(130px, 22svh, 190px);
+  width: auto;
+  max-width: 100%;
+  margin: 0 auto 14px;
+  border-radius: 18px;
+  object-fit: cover;
+}
+
+.gif.is-hidden { display: none; }   /* жүктелмей қалса — жасырамыз */
+
+.title {
+  margin: 0 0 8px;
+  font-size: clamp(23px, 5.8vw, 32px);
+  line-height: 1.22;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--accent);
+}
+
+.subtitle {
+  margin: 0 0 18px;
+  font-size: clamp(14px, 3.6vw, 16px);
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+
+/* ---------- Ойын алаңы: батырманың ШЕКАРАСЫ ---------- */
+
+.arena {
+  position: relative;                 /* батырма осыған қатысты орналасады */
+  height: clamp(170px, 28svh, 220px);
+  border: 1px dashed var(--line);
+  border-radius: 18px;
+  background: rgba(233, 77, 88, .04);
+  overflow: hidden;                   /* батырма шекарадан шықпайды */
+}
+
+.arena__row {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* ---------- Батырмалар ---------- */
+
+.btn {
+  appearance: none;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+  font-size: clamp(15px, 4vw, 17px);
+  padding: 13px 32px;
+  min-height: 48px;
+  border-radius: 999px;
+  border: 2px solid var(--accent);
+  transition: transform .2s var(--ease), background .2s var(--ease),
+              color .2s var(--ease);
+  touch-action: manipulation;
+}
+
+.btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+
+.btn--yes {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(233, 77, 88, .32);
+}
+.btn--yes:hover  { background: var(--accent-dark); border-color: var(--accent-dark); }
+.btn--yes:active { transform: scale(.96); }
+
+.btn--no {
+  background: #fff;
+  color: var(--accent);
+  will-change: transform;
+}
+
+/* Алаң ішінде еркін жүретін күй */
+.btn--no.is-loose {
+  position: absolute;
+  margin: 0;
+  z-index: 3;
+  transition: transform .35s var(--ease);
+}
+
+/* Батырма ағыннан шыққанда "Иә" орнынан жылжымауы үшін бос орын */
+.btn-ghost {
+  display: block;
+  flex: 0 0 auto;
+  pointer-events: none;
+}
+
+.hint {
+  margin: 12px 0 0;
+  font-size: clamp(13px, 3.2vw, 15px);
+  color: var(--accent);
+}
+.hint--soft { color: var(--ink-soft); }
+
+/* ---------- Контакт ---------- */
+
+.contact {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 28px;
+  border-radius: 999px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: clamp(16px, 4.2vw, 19px);
+  color: #fff;
+  background: var(--accent);
+  box-shadow: 0 4px 14px rgba(233, 77, 88, .32);
+  transition: transform .2s var(--ease), background .2s var(--ease);
+  word-break: break-word;
+}
+.contact:hover  { background: var(--accent-dark); }
+.contact:active { transform: scale(.97); }
+
+/* ---------- Адаптив ---------- */
+
+@media (max-height: 620px) {
+  .gif { height: clamp(100px, 18svh, 140px); margin-bottom: 10px; }
+  .card { padding: 16px 20px; }
+  .subtitle { margin-bottom: 12px; }
+  .arena { height: clamp(140px, 30svh, 180px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    transition-duration: .15s !important;
+  }
+}

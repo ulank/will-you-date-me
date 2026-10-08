@@ -5,41 +5,15 @@
    ============================================================ */
 
 const CONFIG = {
-  // Telegram/Instagram username (@-пен де, @-сыз да) немесе телефон нөмірі
-  contact: 'ulankozhabekov',
+  // Кімді шақырамыз
+  name: 'Жанерке',
 
-  // 'telegram' | 'instagram' | 'phone' | 'none'
-  contactType: 'instagram',
+  // Жауап осы Telegram-ботпен саған келеді (қалай алу керегі — README-де)
+  telegram: {
+    botToken: '',
+    chatId: '8423217046',
+  },
 };
-
-/* ---------- Контакт сілтемесі ---------- */
-
-(function setupContact() {
-  const link = document.getElementById('contact-link');
-  const text = document.getElementById('contact-text');
-  const icon = link.querySelector('.contact__icon');
-  const raw = String(CONFIG.contact || '').trim();
-  const handle = raw.replace(/^@/, '');
-
-  text.textContent = CONFIG.contactType === 'phone' ? raw : '@' + handle;
-
-  if (CONFIG.contactType === 'telegram') {
-    link.href = 'https://t.me/' + encodeURIComponent(handle);
-    icon.textContent = '✈️';
-  } else if (CONFIG.contactType === 'instagram') {
-    link.href = 'https://www.instagram.com/' + encodeURIComponent(handle);
-    icon.textContent = '📷';
-  } else if (CONFIG.contactType === 'phone') {
-    link.href = 'tel:' + raw.replace(/[^\d+]/g, '');
-    link.removeAttribute('target');
-    icon.textContent = '📞';
-  } else {
-    link.removeAttribute('href');
-    link.removeAttribute('target');
-    icon.textContent = '💌';
-  }
-})();
-
 
 // Гифканы ауыстыру: index.html ішіндегі <img class="gif"> src-ін өзгертіңіз.
 // Интернет болмаса немесе сілтеме өлсе — сурет орны бос қалмай, жасырылады.
@@ -166,6 +140,7 @@ function distanceToBtn(clientX, clientY) {
 }
 
 function tryEscape(clientX, clientY, threshold) {
+  if (screenAsk.hidden) return;
   if (distanceToBtn(clientX, clientY) >= threshold) return;
   const p = toLocal(clientX, clientY);
   escape(p.x, p.y);
@@ -217,25 +192,268 @@ window.addEventListener('resize', reclamp);
 window.addEventListener('orientationchange', () => setTimeout(reclamp, 250));
 
 /* ============================================================
-   2. Экран ауысуы
+   2. Экрандар: сұрақ → түрі → нақтылау → күні/уақыты → нөмір → дайын
    ============================================================ */
 
-const screenAsk = document.getElementById('screen-ask');
-const screenYay = document.getElementById('screen-yay');
+// Кездесу түрлері. Жаңасын қосу үшін осы тізімге жол қосыңыз.
+// options бос болса — қонақ өз нұсқасын мәтінмен жазады.
+const DATE_TYPES = [
+  { icon: '🍽️', label: 'Тамақ ішу', question: 'Қандай асхана ұнайды?',
+    options: ['🥟 Қазақ', '🍖 Грузин', '🍣 Жапон', '🍝 Итальян', '🌶️ Корей', '🥙 Түрік', '🍚 Өзбек', '🤍 Сен таңда'] },
+  { icon: '⛰️', label: 'Тауға шығу', question: 'Тауда не істейміз?',
+    options: ['🥾 Жаяу серуен', '🚡 Аспалы жол', '🧺 Пикник', '🌅 Күн батуын көру'] },
+  { icon: '🎬', label: 'Киноға бару', question: 'Қандай кино көреміз?',
+    options: ['😂 Комедия', '💞 Романтика', '👻 Қорқынышты', '🦸 Экшн', '🧸 Мультфильм', '🤍 Сен таңда'] },
+  { icon: '☕️', label: 'Кофе мен десерт', question: 'Не ішеміз?',
+    options: ['☕️ Кофе', '🍵 Шай', '🍰 Десерт', '🍦 Балмұздақ'] },
+  { icon: '🌳', label: 'Серуендеу', question: 'Қайда серуендейміз?',
+    options: ['🌳 Саябақ', '🌆 Қала орталығы', '🌃 Түнгі қала', '🤍 Сен таңда'] },
+  { icon: '✨', label: 'Өз нұсқам', question: 'Қайда барғың келеді?', options: [] },
+];
 
-btnYes.addEventListener('click', () => {
-  if (screenAsk.dataset.done) return;
-  screenAsk.dataset.done = '1';
+const DAYS_AHEAD = 14;
+const TIMES = ['10:00', '11:00', '12:00', '13:00', '14:00', '15:00',
+               '16:00', '17:00', '18:00', '19:00', '20:00', '21:00'];
 
-  screenAsk.classList.remove('is-active');
+const WEEKDAYS_SHORT = ['Жс', 'Дс', 'Сс', 'Ср', 'Бс', 'Жм', 'Сн'];
+const WEEKDAYS = ['жексенбі', 'дүйсенбі', 'сейсенбі', 'сәрсенбі', 'бейсенбі', 'жұма', 'сенбі'];
+const MONTHS = ['қаңтар', 'ақпан', 'наурыз', 'сәуір', 'мамыр', 'маусым',
+                'шілде', 'тамыз', 'қыркүйек', 'қазан', 'қараша', 'желтоқсан'];
+
+const stage        = document.querySelector('.stage');
+const screenAsk    = document.getElementById('screen-ask');
+const screenType   = document.getElementById('screen-type');
+const screenDetail = document.getElementById('screen-detail');
+const screenWhen   = document.getElementById('screen-when');
+const screenPhone  = document.getElementById('screen-phone');
+const screenYay    = document.getElementById('screen-yay');
+
+const state = { type: null, detail: '', date: null, time: '', phone: '' };
+
+document.getElementById('q-title').textContent = `${CONFIG.name}, менімен кездесуге барасың ба?`;
+document.title = `${CONFIG.name}, менімен кездесуге барасың ба?`;
+
+/* --- Экран ауыстыру --- */
+
+let current = screenAsk;
+let switching = false;
+const trail = [];               // "Артқа" үшін өткен экрандар
+
+function showScreen(next, back) {
+  if (switching || next === current) return;
+  switching = true;
+  const prev = current;
+  if (!back) trail.push(prev);
+  prev.classList.remove('is-active');
 
   setTimeout(() => {
-    screenAsk.hidden = true;
-    screenYay.hidden = false;
-    void screenYay.offsetWidth;                  // reflow — transition іске қосылсын
-    screenYay.classList.add('is-active');
-    startFireworks();
+    prev.hidden = true;
+    next.hidden = false;
+    void next.offsetWidth;                       // reflow — transition іске қосылсын
+    next.classList.add('is-active');
+    stage.scrollTop = 0;
+    current = next;
+    switching = false;
   }, 380);
+}
+
+document.querySelectorAll('[data-back]').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    if (switching || !trail.length) return;
+    showScreen(trail.pop(), true);
+  });
+});
+
+function optionButton(text, onPick) {
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'opt';
+  btn.textContent = text;
+  btn.addEventListener('click', onPick);
+  return btn;
+}
+
+function select(list, picked) {
+  list.querySelectorAll('.is-selected').forEach((el) => el.classList.remove('is-selected'));
+  picked.classList.add('is-selected');
+}
+
+/* --- Сұрақ → түрі --- */
+
+btnYes.addEventListener('click', () => showScreen(screenType));
+
+const typeOptions = document.getElementById('type-options');
+DATE_TYPES.forEach((type) => {
+  const btn = optionButton(`${type.icon} ${type.label}`, () => {
+    select(typeOptions, btn);
+    if (state.type !== type) state.detail = '';
+    state.type = type;
+    renderDetail();
+    showScreen(screenDetail);
+  });
+  typeOptions.appendChild(btn);
+});
+
+/* --- Нақтылау --- */
+
+const detailOptions = document.getElementById('detail-options');
+const detailCustom  = document.getElementById('detail-custom');
+const detailInput   = document.getElementById('detail-input');
+
+function renderDetail() {
+  const type = state.type;
+  const custom = !type.options.length;
+  document.getElementById('d-title').textContent = type.question;
+  document.getElementById('d-subtitle').textContent = custom ? 'Өз ойыңды жаз' : 'Біреуін таңда';
+
+  detailOptions.hidden = custom;
+  detailCustom.hidden = !custom;
+  detailOptions.textContent = '';
+  if (custom) { detailInput.value = state.detail; return; }
+
+  type.options.forEach((label) => {
+    const btn = optionButton(label, () => {
+      select(detailOptions, btn);
+      state.detail = label;
+      showScreen(screenWhen);
+    });
+    if (label === state.detail) btn.classList.add('is-selected');
+    detailOptions.appendChild(btn);
+  });
+}
+
+detailCustom.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const value = detailInput.value.trim();
+  if (!value) { detailInput.focus(); return; }
+  state.detail = value;
+  showScreen(screenWhen);
+});
+
+/* --- Күні мен уақыты --- */
+
+const dayList  = document.getElementById('day-list');
+const timeList = document.getElementById('time-list');
+const btnWhen  = document.getElementById('btn-when');
+
+const isToday = (date) => date.toDateString() === new Date().toDateString();
+
+// Бүгінге өтіп кеткен (немесе 1 сағаттан аз қалған) уақытты таңдауға болмайды
+function timeAvailable(date, time) {
+  return !isToday(date) || parseInt(time, 10) > new Date().getHours() + 1;
+}
+
+function refreshTimes() {
+  timeList.querySelectorAll('.chip').forEach((chip) => {
+    chip.disabled = Boolean(state.date) && !timeAvailable(state.date, chip.textContent);
+    if (chip.disabled && chip.textContent === state.time) {
+      chip.classList.remove('is-selected');
+      state.time = '';
+    }
+  });
+  btnWhen.disabled = !(state.date && state.time);
+}
+
+for (let i = 0; i < DAYS_AHEAD; i++) {
+  const date = new Date();
+  date.setHours(0, 0, 0, 0);
+  date.setDate(date.getDate() + i);
+  if (!TIMES.some((time) => timeAvailable(date, time))) continue;   // бүгін кеш болса
+
+  const chip = document.createElement('button');
+  chip.type = 'button';
+  chip.className = 'chip chip--day';
+  chip.innerHTML = `<span>${WEEKDAYS_SHORT[date.getDay()]}</span>` +
+                   `<strong>${date.getDate()}</strong>` +
+                   `<span>${MONTHS[date.getMonth()].slice(0, 3)}</span>`;
+  chip.setAttribute('aria-label', formatDate(date));
+  chip.addEventListener('click', () => {
+    select(dayList, chip);
+    state.date = date;
+    refreshTimes();
+  });
+  dayList.appendChild(chip);
+}
+
+TIMES.forEach((time) => {
+  const chip = document.createElement('button');
+  chip.type = 'button';
+  chip.className = 'chip';
+  chip.textContent = time;
+  chip.addEventListener('click', () => {
+    select(timeList, chip);
+    state.time = time;
+    refreshTimes();
+  });
+  timeList.appendChild(chip);
+});
+
+function formatDate(date) {
+  return `${date.getDate()} ${MONTHS[date.getMonth()]}, ${WEEKDAYS[date.getDay()]}`;
+}
+
+btnWhen.addEventListener('click', () => showScreen(screenPhone));
+
+/* --- Нөмір → Telegram --- */
+
+const phoneForm  = document.getElementById('phone-form');
+const phoneInput = document.getElementById('phone-input');
+const phoneError = document.getElementById('phone-error');
+const btnSend    = document.getElementById('btn-send');
+
+phoneInput.addEventListener('input', () => { phoneError.hidden = true; });
+
+async function sendToTelegram(text) {
+  const { botToken, chatId } = CONFIG.telegram;
+  if (!botToken || !chatId) return false;
+  try {
+    const res = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+      method: 'POST',
+      body: new URLSearchParams({ chat_id: chatId, text }),
+    });
+    const data = await res.json();
+    return Boolean(data.ok);
+  } catch (e) {
+    return false;
+  }
+}
+
+phoneForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if (btnSend.disabled) return;
+
+  const phone = phoneInput.value.trim();
+  const digits = phone.replace(/\D/g, '');
+  if (digits.length < 10 || digits.length > 15) {
+    phoneError.textContent = 'Нөмірді толық жазшы';
+    phoneError.hidden = false;
+    phoneInput.focus();
+    return;
+  }
+  state.phone = phone;
+
+  const what = `${state.type.icon} ${state.type.label} — ${state.detail}`;
+  const when = `📅 ${formatDate(state.date)}, ${state.time}`;
+
+  btnSend.disabled = true;
+  btnSend.textContent = 'Жіберілуде…';
+  const sent = await sendToTelegram(
+    `💌 ${CONFIG.name} кездесуге келісті!\n\n${what}\n${when}\n📞 ${state.phone}`
+  );
+  btnSend.disabled = false;
+  btnSend.textContent = 'Жіберу';
+
+  if (!sent) {
+    phoneError.textContent = 'Жіберілмей қалды. Интернетті тексеріп, қайта басып көрші';
+    phoneError.hidden = false;
+    return;
+  }
+
+  document.getElementById('summary').textContent = `${what}\n${when}`;
+
+  trail.length = 0;
+  showScreen(screenYay);
+  setTimeout(startFireworks, 380);
 });
 
 /* ============================================================

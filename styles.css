@@ -23,6 +23,8 @@
 
 * { box-sizing: border-box; }
 
+[hidden] { display: none !important; }
+
 html, body { height: 100%; margin: 0; }
 
 body {
@@ -68,9 +70,11 @@ body {
 .stage {
   position: relative;
   z-index: 2;
-  min-height: 100svh;
+  height: 100svh;
+  overflow-y: auto;                   /* ұзын қадамдар кішкентай экранда айналады */
   display: grid;
-  place-items: center;
+  justify-items: center;
+  align-items: start;
   padding:
     calc(var(--sa-t) + 14px)
     calc(var(--sa-r) + 14px)
@@ -82,6 +86,7 @@ body {
   grid-area: 1 / 1;
   width: 100%;
   max-width: 480px;
+  margin-block: auto;                 /* ортаға қояды, сыймаса — жоғарыдан бастайды */
   opacity: 0;
   transform: translateY(12px);
   transition: opacity .5s var(--ease), transform .5s var(--ease);
@@ -212,25 +217,134 @@ body {
 }
 .hint--soft { color: var(--ink-soft); }
 
-/* ---------- Контакт ---------- */
+/* ---------- Таңдау қадамдары ---------- */
 
-.contact {
-  display: inline-flex;
-  align-items: center;
+.options {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: 10px;
-  padding: 14px 28px;
-  border-radius: 999px;
-  text-decoration: none;
-  font-weight: 600;
-  font-size: clamp(16px, 4.2vw, 19px);
-  color: #fff;
-  background: var(--accent);
-  box-shadow: 0 4px 14px rgba(233, 77, 88, .32);
-  transition: transform .2s var(--ease), background .2s var(--ease);
-  word-break: break-word;
 }
-.contact:hover  { background: var(--accent-dark); }
-.contact:active { transform: scale(.97); }
+
+.opt, .chip {
+  appearance: none;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+  color: var(--ink);
+  background: #fff;
+  border: 2px solid var(--line);
+  border-radius: 16px;
+  transition: transform .2s var(--ease), background .2s var(--ease),
+              color .2s var(--ease), border-color .2s var(--ease);
+  touch-action: manipulation;
+}
+
+.opt {
+  min-height: 56px;
+  padding: 12px 10px;
+  font-size: clamp(14px, 3.8vw, 16px);
+  line-height: 1.25;
+}
+
+.opt:hover, .chip:hover:not(:disabled) { border-color: var(--accent); }
+.opt:active, .chip:active:not(:disabled) { transform: scale(.96); }
+.opt:focus-visible, .chip:focus-visible, .back:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+
+.opt.is-selected, .chip.is-selected {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.days {
+  display: flex;
+  gap: 8px;
+  margin: 0 -6px 14px;
+  padding: 4px 6px 8px;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+}
+
+.chip { padding: 10px 0; font-size: 15px; }
+.chip:disabled { opacity: .35; cursor: default; }
+
+.chip--day {
+  flex: 0 0 62px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: 12px;
+  font-weight: 500;
+  scroll-snap-align: start;
+}
+.chip--day strong { font-size: 20px; line-height: 1.1; }
+
+.times {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.form { display: grid; gap: 12px; }
+
+.field {
+  width: 100%;
+  min-height: 52px;
+  padding: 12px 18px;
+  font: inherit;
+  font-size: 17px;                    /* 16px-тен кіші болса iOS экранды үлкейтіп жібереді */
+  text-align: center;
+  color: var(--ink);
+  background: #fff;
+  border: 2px solid var(--line);
+  border-radius: 16px;
+  outline: none;
+  transition: border-color .2s var(--ease);
+}
+.field:focus { border-color: var(--accent); }
+.field::placeholder { color: var(--ink-soft); }
+
+.error {
+  margin: -4px 0 0;
+  font-size: 14px;
+  color: var(--accent-dark);
+}
+
+.btn--wide { width: 100%; }
+.btn:disabled { opacity: .45; cursor: default; box-shadow: none; }
+
+.back {
+  appearance: none;
+  cursor: pointer;
+  margin-top: 14px;
+  padding: 8px 12px;
+  font: inherit;
+  font-size: 14px;
+  color: var(--ink-soft);
+  background: none;
+  border: 0;
+  border-radius: 10px;
+}
+.back:hover { color: var(--accent); }
+
+.summary {
+  margin: 0 0 18px;
+  padding: 14px 16px;
+  font-size: clamp(15px, 4vw, 17px);
+  font-weight: 600;
+  line-height: 1.6;
+  white-space: pre-line;
+  border: 1px dashed var(--line);
+  border-radius: 18px;
+  background: rgba(233, 77, 88, .04);
+}
+.summary:last-child { margin-bottom: 0; }
 
 /* ---------- Адаптив ---------- */
 

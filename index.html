@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#f6d3d9">
     <meta name="description" content="Кездесуге шақыру">
-    <title>Менімен кездесуге барасың ба?</title>
+    <title>Жанерке, менімен кездесуге барасың ба?</title>
     <link rel="stylesheet" href="styles.css">
     <!-- "Иә" басылғанда бірден көрінуі үшін алдын ала жүктейміз -->
     <link rel="preload" as="image" href="https://media.giphy.com/media/UMon0fuimoAN9ueUNP/giphy.gif">
@@ -43,7 +43,7 @@
             <img class="gif" id="gif-ask" width="304" height="264" alt=""
                  src="https://media.giphy.com/media/FTGah7Mx3ss04PcasF/giphy.gif">
 
-            <h1 class="title" id="q-title">Менімен кездесуге барасың ба?</h1>
+            <h1 class="title" id="q-title">Жанерке, менімен кездесуге барасың ба?</h1>
             <p class="subtitle"></p>
 
             <div class="arena" id="arena">
@@ -55,20 +55,78 @@
         </div>
     </section>
 
+    <!-- 2-экран: кездесу түрі -->
+    <section class="screen" id="screen-type" aria-labelledby="t-title" hidden>
+        <div class="card">
+            <h2 class="title" id="t-title">Қайда барамыз?</h2>
+            <p class="subtitle">Көңілің қалағанын таңда</p>
+
+            <div class="options" id="type-options"></div>
+
+            <button class="back" type="button" data-back>← Артқа</button>
+        </div>
+    </section>
+
+    <!-- 3-экран: нақтылау (асхана түрі, тауда не істейміз, т.б.) -->
+    <section class="screen" id="screen-detail" aria-labelledby="d-title" hidden>
+        <div class="card">
+            <h2 class="title" id="d-title"></h2>
+            <p class="subtitle" id="d-subtitle">Біреуін таңда</p>
+
+            <div class="options" id="detail-options"></div>
+
+            <form class="form" id="detail-custom" hidden novalidate>
+                <input class="field" id="detail-input" type="text" maxlength="120"
+                       autocomplete="off" placeholder="Мысалы: боулинг, театр, концерт…">
+                <button class="btn btn--yes btn--wide" type="submit">Әрі қарай</button>
+            </form>
+
+            <button class="back" type="button" data-back>← Артқа</button>
+        </div>
+    </section>
+
+    <!-- 4-экран: күні мен уақыты -->
+    <section class="screen" id="screen-when" aria-labelledby="w-title" hidden>
+        <div class="card">
+            <h2 class="title" id="w-title">Қашан кездесеміз?</h2>
+            <p class="subtitle">Күні мен уақытын таңда</p>
+
+            <div class="days" id="day-list" role="group" aria-label="Күні"></div>
+            <div class="times" id="time-list" role="group" aria-label="Уақыты"></div>
+
+            <button class="btn btn--yes btn--wide" id="btn-when" type="button" disabled>Әрі қарай</button>
+            <button class="back" type="button" data-back>← Артқа</button>
+        </div>
+    </section>
+
+    <!-- 5-экран: телефон нөмірі -->
+    <section class="screen" id="screen-phone" aria-labelledby="p-title" hidden>
+        <div class="card">
+            <h2 class="title" id="p-title">Нөміріңді қалдыршы</h2>
+            <p class="subtitle">Мен саған өзім хабарласамын&nbsp;📞</p>
+
+            <form class="form" id="phone-form" novalidate>
+                <input class="field" id="phone-input" type="tel" inputmode="tel" autocomplete="tel"
+                       maxlength="20" placeholder="+7 700 123 45 67" aria-label="Телефон нөмірі"
+                       aria-describedby="phone-error">
+                <p class="error" id="phone-error" role="alert" hidden>Нөмірді толық жазшы</p>
+                <button class="btn btn--yes btn--wide" id="btn-send" type="submit">Жіберу</button>
+            </form>
+
+            <button class="back" type="button" data-back>← Артқа</button>
+        </div>
+    </section>
+
+    <!-- 6-экран: дайын -->
     <section class="screen" id="screen-yay" aria-labelledby="y-title" hidden>
         <div class="card">
             <img class="gif" id="gif-yes" width="272" height="242" alt=""
                  src="https://media.giphy.com/media/UMon0fuimoAN9ueUNP/giphy.gif">
 
             <h2 class="title" id="y-title">Бәрекелді! 🎉</h2>
-            <p class="subtitle">Мен қуаныштымын. Маған жаз&nbsp;👇</p>
+            <p class="subtitle" id="y-subtitle">Кездескенше! Мен саған хабарласамын&nbsp;💛</p>
 
-            <a class="contact" id="contact-link" href="#" target="_blank" rel="noopener">
-                <span class="contact__icon" aria-hidden="true">📷</span>
-                <span class="contact__text" id="contact-text">@ulankozhabekov</span>
-            </a>
-
-            <p class="hint hint--soft">Күні мен орнын бірге таңдаймыз&nbsp;☕️</p>
+            <p class="summary" id="summary"></p>
         </div>
     </section>
 

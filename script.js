@@ -10,7 +10,7 @@ const CONFIG = {
 
   // Жауап осы Telegram-ботпен саған келеді (қалай алу керегі — README-де)
   telegram: {
-    botToken: '',
+    botToken: '8968502297:AAEEzQOLyIVf0x6dFHJd-uppRUPxppqwG0U',
     chatId: '8423217046',
   },
 };
